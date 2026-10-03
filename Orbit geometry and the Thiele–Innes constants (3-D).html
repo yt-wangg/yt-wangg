@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Orbit geometry and the Thiele–Innes constants</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+  --bg:#f6f5f1; --panel:#ffffff; --fg:#1c1e22; --muted:#626873; --border:#dedbd3;
+  --axis:#6d7380; --sky:rgba(70,100,170,.10); --skyline:rgba(70,100,170,.42);
+  --orb:rgba(210,110,50,.15); --orbit:#23262d;
+  --c-omega:#d9731a; --c-inc:#14925b; --c-w:#8248c4; --c-nu:#d63d66; --c-psi:#2a6bdc;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121418; --panel:#1b1e24; --fg:#e8e8e6; --muted:#9aa0aa; --border:#2d313a;
+    --axis:#8c93a0; --sky:rgba(120,160,255,.11); --skyline:rgba(140,170,255,.45);
+    --orb:rgba(255,150,90,.16); --orbit:#e9e9e6;
+    --c-omega:#f59a3c; --c-inc:#3ecf8e; --c-w:#b28cf0; --c-nu:#f06b8e; --c-psi:#6aa2ff;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121418; --panel:#1b1e24; --fg:#e8e8e6; --muted:#9aa0aa; --border:#2d313a;
+  --axis:#8c93a0; --sky:rgba(120,160,255,.11); --skyline:rgba(140,170,255,.45);
+  --orb:rgba(255,150,90,.16); --orbit:#e9e9e6;
+  --c-omega:#f59a3c; --c-inc:#3ecf8e; --c-w:#b28cf0; --c-nu:#f06b8e; --c-psi:#6aa2ff;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:15px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 14px 28px;}
+h1{font-size:1.25rem;margin:4px 0 6px;font-weight:650;}
+header p{margin:0 0 12px;color:var(--muted);max-width:78ch;}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:14px;align-items:start;}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr);}}
+.stage canvas{display:block;width:100%;aspect-ratio:1/1;max-height:78vh;touch-action:none;cursor:grab;
+  background:var(--panel);border:1px solid var(--border);border-radius:12px;}
+.stage canvas:active{cursor:grabbing;}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;}
+button{font:inherit;font-size:.86rem;color:var(--fg);background:var(--panel);border:1px solid var(--border);
+  border-radius:8px;padding:6px 10px;cursor:pointer;}
+button:hover{border-color:var(--axis);}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:6px 14px;margin-top:12px;font-size:.86rem;}
+.legend div{display:flex;gap:8px;align-items:flex-start;}
+.sw{flex:none;width:12px;height:12px;border-radius:3px;margin-top:4px;}
+.legend b{font-weight:650;}
+.legend span.d{color:var(--muted);}
+.panel{display:flex;flex-direction:column;gap:12px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+.card h3{margin:0 0 8px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:650;}
+.ctrl{margin:0 0 9px;}
+.ctrl label{display:flex;align-items:center;gap:7px;font-size:.88rem;}
+.ctrl label .sym{font-weight:700;min-width:1.1em;}
+.ctrl label .nm{color:var(--muted);font-size:.8rem;flex:1;}
+.ctrl label output{font-variant-numeric:tabular-nums;font-weight:600;}
+input[type=range]{width:100%;margin:3px 0 0;accent-color:var(--axis);}
+.chk{display:flex;gap:8px;align-items:center;font-size:.9rem;margin:5px 0;}
+table.ro{width:100%;border-collapse:collapse;font-size:.84rem;}
+table.ro th{text-align:left;font-weight:500;color:var(--muted);padding:2px 8px 2px 0;white-space:nowrap;}
+table.ro td{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;padding:2px 0;}
+table.ro tr.sep td,table.ro tr.sep th{padding-top:8px;border-top:1px solid var(--border);}
+.note{font-size:.82rem;color:var(--muted);margin:8px 0 0;}
+pre{margin:0;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-x:auto;white-space:pre;}
+.ok{color:var(--c-inc);font-weight:650;} .bad{color:var(--c-nu);font-weight:650;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Orbit geometry and the Thiele–Innes constants</h1>
+    <p>Orbit of the <b>primary about the barycentre</b> (primary-frame convention of spectroscopic orbits and of orblet), in the frame used in the notes:
+      <b>x = North</b>, <b>y = East</b> (position angle θ from N through E), <b>z = line of sight, positive away from the observer</b>.
+      The companion lies on the opposite side of the barycentre; its orbit relative to the primary has the constants −(A,B,F,G), i.e. ω+180° at the same Ω.
+      Drag the picture to rotate; the buttons jump to the standard projections.</p>
+  </header>
+
+  <div class="grid">
+    <section class="stage">
+      <canvas id="cv" role="img" aria-label="Interactive 3-D view of an orbit, the sky plane and the angles Omega, i, omega, nu and psi"></canvas>
+      <div class="row">
+        <button data-view="obs">Observer view</button>
+        <button data-view="node">Along line of nodes (shows i)</button>
+        <button data-view="top">Face-on to orbit (shows ω, ν)</button>
+      </div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <aside class="panel">
+      <div class="card">
+        <h3>Elements</h3>
+        <div id="sliders"></div>
+        <div class="row">
+          <button data-preset="typical">Typical</button>
+          <button data-preset="edge">Edge-on</button>
+          <button data-preset="face">Nearly face-on</button>
+          <button data-preset="retro">Retrograde</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Display</h3>
+        <label class="chk"><input type="checkbox" id="t_planes" checked> Shade sky plane and orbit plane</label>
+        <label class="chk"><input type="checkbox" id="t_arcs" checked> Angle arcs and labels</label>
+        <label class="chk"><input type="checkbox" id="t_wedges" checked> Shade the angles</label>
+        <label class="chk"><input type="checkbox" id="t_proj" checked> Projection on the sky (apparent orbit)</label>
+        <label class="chk"><input type="checkbox" id="t_scan"> Gaia scan direction ψ and abscissa w</label>
+        <label class="chk"><input type="checkbox" id="t_anim"> Animate orbital phase</label>
+      </div>
+
+      <div class="card">
+        <h3>Live values</h3>
+        <table class="ro" id="ro"></table>
+        <p class="note" id="chk"></p>
+      </div>
+
+      <div class="card">
+        <h3>Formulas</h3>
+<pre>X = cos E − e,  Y = √(1−e²) sin E
+x = A X + F Y     (North)
+y = B X + G Y     (East)
+z = C X + H Y     (away)
+A = a( cosω cosΩ − sinω sinΩ cos i)
+B = a( cosω sinΩ + sinω cosΩ cos i)
+F = a(−sinω cosΩ − cosω sinΩ cos i)
+G = a(−sinω sinΩ + cosω cosΩ cos i)
+C = a sinω sin i,  H = a cosω sin i
+w = x cosψ + y sinψ
+
+primary-frame ω, as in spectroscopy and orblet.
+Companion relative to primary: −(A,B,F,G)
+(= same formulas with ω+π, same Ω).</pre>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var PI=Math.PI, TAU=2*PI, D2R=PI/180, R2D=180/PI;
+var cos=Math.cos, sin=Math.sin, sqrt=Math.sqrt, atan2=Math.atan2;
+function clamp(x,a,b){return Math.min(b,Math.max(a,x));}
+function wrap(a){return ((a%TAU)+TAU)%TAU;}
+function wrapPi(a){a=wrap(a);return a>PI?a-TAU:a;}
+
+/* ---------- small vector / matrix helpers (scene frame is (East, North, Away), right-handed) ---------- */
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function add(a,b){return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];}
+function mul(a,k){return [a[0]*k,a[1]*k,a[2]*k];}
+function unit(a){var n=Math.hypot(a[0],a[1],a[2])||1;return mul(a,1/n);}
+function mm(A,B){var R=[],i,j;for(i=0;i<3;i++){R.push([]);for(j=0;j<3;j++)R[i].push(A[i][0]*B[0][j]+A[i][1]*B[1][j]+A[i][2]*B[2][j]);}return R;}
+function tp(A){return [[A[0][0],A[1][0],A[2][0]],[A[0][1],A[1][1],A[2][1]],[A[0][2],A[1][2],A[2][2]]];}
+function mv(A,v){return [dot(A[0],v),dot(A[1],v),dot(A[2],v)];}
+function rotX(b){var c=cos(b),s=sin(b);return [[1,0,0],[0,c,-s],[0,s,c]];}
+function rotY(a){var c=cos(a),s=sin(a);return [[c,0,s],[0,1,0],[-s,0,c]];}
+function rodrigues(k,th){var c=cos(th),s=sin(th),x=k[0],y=k[1],z=k[2],C=1-c;
+  return [[c+x*x*C,x*y*C-z*s,x*z*C+y*s],[y*x*C+z*s,c+y*y*C,y*z*C-x*s],[z*x*C-y*s,z*y*C+x*s,c+z*z*C]];}
+function axisAngle(R){
+  var tr=R[0][0]+R[1][1]+R[2][2], ang=Math.acos(clamp((tr-1)/2,-1,1));
+  if(ang<1e-6) return {ax:[0,0,1],ang:0};
+  if(PI-ang<1e-4){
+    var best=null,bn=-1,j,col,n;
+    for(j=0;j<3;j++){col=[(R[0][j]+(j===0?1:0))/2,(R[1][j]+(j===1?1:0))/2,(R[2][j]+(j===2?1:0))/2];n=Math.hypot(col[0],col[1],col[2]);if(n>bn){bn=n;best=col;}}
+    return {ax:unit(best),ang:ang};
+  }
+  return {ax:unit([R[2][1]-R[1][2],R[0][2]-R[2][0],R[1][0]-R[0][1]]),ang:ang};
+}
+/* view matrix rows = (screen right, screen up, toward viewer) expressed in scene coordinates */
+function viewFrom(t,u){t=unit(t);u=unit(add(u,mul(t,-dot(u,t))));var r=cross(u,t);return [r,u,t];}
+function orthonormalize(V){return viewFrom(V[2],V[1]);}
+
+/* physical vectors below are in (xN, yE, zAway); toScene maps to the right-handed (E, N, Away) frame */
+function toScene(v){return [v[1],v[0],v[2]];}
+
+/* ---------- state ---------- */
+var S={Om:40,inc:60,om:30,e:0.5,M:60,psi:30,a:100,planes:true,arcs:true,wedges:true,proj:true,scan:false,anim:false};
+var PRESETS={
+  typical:{Om:40,inc:60,om:30,e:0.5,M:60},
+  edge:{Om:40,inc:90,om:30,e:0.5,M:60},
+  face:{Om:40,inc:8,om:30,e:0.5,M:60},
+  retro:{Om:40,inc:130,om:30,e:0.5,M:60}
+};
+var CFG=[
+  {k:'Om',sym:'Ω',name:'PA of ascending node (primary receding)',min:0,max:360,step:1,unit:'°',c:'--c-omega'},
+  {k:'inc',sym:'i',name:'inclination',min:1,max:179,step:1,unit:'°',c:'--c-inc'},
+  {k:'om',sym:'ω',name:'arg. of periastron (primary)',min:0,max:360,step:1,unit:'°',c:'--c-w'},
+  {k:'e',sym:'e',name:'eccentricity',min:0,max:0.9,step:0.01,unit:'',c:'--axis'},
+  {k:'M',sym:'M',name:'mean anomaly (phase)',min:0,max:360,step:1,unit:'°',c:'--c-nu'},
+  {k:'psi',sym:'ψ',name:'Gaia scan angle (PA)',min:0,max:360,step:1,unit:'°',c:'--c-psi'},
+  {k:'a',sym:'a',name:'amplitude of this orbit (readouts only)',min:20,max:500,step:5,unit:' mas',c:'--axis'}
+];
+var LEG=[
+  ['--c-omega','Ω','position angle of the ascending node (where the primary recedes, z increasing), measured in the sky plane from N toward E'],
+  ['--c-inc','i','inclination: angle between the orbit plane and the sky plane'],
+  ['--c-w','ω','argument of periastron of the primary: from the ascending node to periastron, in the orbit plane, along the motion (the companion’s is ω+180°)'],
+  ['--c-nu','ν','true anomaly: from periastron to the primary'],
+  ['--c-psi','ψ','Gaia scan angle: PA of the along-scan direction; w is the primary’s position projected on it']
+];
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+var W=600,H=600,dpr=1,cx=300,cy=300,sc=100;
+var DCAM=12, SK=2.0;
+var Vobs=viewFrom([0,0,-1],[0,1,0]);
+var V=mm(rotX(-0.85),mm(rotY(0.6),Vobs));
+var trans=null, dirty=true, drag=null;
+
+/* ---------- UI construction ---------- */
+function fmt(k,v){ if(k==='e') return v.toFixed(2); if(k==='a') return v.toFixed(0)+' mas'; return v.toFixed(0)+'°'; }
+(function buildUI(){
+  var sl=document.getElementById('sliders'), html='';
+  CFG.forEach(function(c){
+    html+='<div class="ctrl"><label><span class="sym" style="color:var('+c.c+')">'+c.sym+'</span><span class="nm">'+c.name+
+      '</span><output id="o_'+c.k+'">'+fmt(c.k,S[c.k])+'</output></label>'+
+      '<input type="range" id="s_'+c.k+'" min="'+c.min+'" max="'+c.max+'" step="'+c.step+'" value="'+S[c.k]+'"></div>';
+  });
+  sl.innerHTML=html;
+  CFG.forEach(function(c){
+    document.getElementById('s_'+c.k).addEventListener('input',function(ev){
+      S[c.k]=parseFloat(ev.target.value); document.getElementById('o_'+c.k).textContent=fmt(c.k,S[c.k]); dirty=true;});
+  });
+  var lg='';
+  LEG.forEach(function(l){lg+='<div><span class="sw" style="background:var('+l[0]+')"></span><span><b>'+l[1]+'</b> <span class="d">'+l[2]+'</span></span></div>';});
+  document.getElementById('legend').innerHTML=lg;
+  [['t_planes','planes'],['t_arcs','arcs'],['t_wedges','wedges'],['t_proj','proj'],['t_scan','scan'],['t_anim','anim']].forEach(function(p){
+    document.getElementById(p[0]).addEventListener('change',function(ev){S[p[1]]=ev.target.checked;dirty=true;});
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'),function(b){
+    b.addEventListener('click',function(){var P=PRESETS[b.getAttribute('data-preset')];for(var k in P)setSlider(k,P[k]);dirty=true;});
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(b){
+    b.addEventListener('click',function(){goTo(viewFor(b.getAttribute('data-view')));});
+  });
+})();
+function setSlider(k,v){S[k]=v;document.getElementById('s_'+k).value=v;document.getElementById('o_'+k).textContent=fmt(k,v);}
+
+/* ---------- orbit geometry ---------- */
+function kepler(Mr,e){var E=e>0.8?PI:Mr,k,f;for(k=0;k<40;k++){f=E-e*sin(E)-Mr;E-=f/(1-e*cos(E));}return E;}
+function geom(){
+  var Om=S.Om*D2R, inc=S.inc*D2R, om=S.om*D2R, e=S.e;
+  var cO=cos(Om),sO=sin(Om),ci=cos(inc),si=sin(inc),cw=cos(om),sw=sin(om);
+  var n=[cO,sO,0], sp=[-sO,cO,0], zz=[0,0,1];
+  var u2=add(mul(sp,ci),mul(zz,si));
+  var Ph=add(mul(n,cw),mul(u2,sw));
+  var Qh=add(mul(n,-sw),mul(u2,cw));
+  var hS=unit(cross(toScene(n),toScene(u2)));   /* orbit normal (angular-momentum direction), scene frame */
+  var b=sqrt(1-e*e);
+  var g={n:n,sp:sp,u2:u2,Ph:Ph,Qh:Qh,hS:hS,e:e,b:b,Om:Om,inc:inc,om:om};
+  g.posE=function(E){return add(mul(Ph,cos(E)-e),mul(Qh,b*sin(E)));};
+  g.Eofnu=function(nu){return 2*atan2(sqrt(1-e)*sin(nu/2),sqrt(1+e)*cos(nu/2));};
+  g.Ecur=kepler(S.M*D2R,e);
+  g.nu=wrap(2*atan2(sqrt(1+e)*sin(g.Ecur/2),sqrt(1-e)*cos(g.Ecur/2)));
+  return g;
+}
+function viewFor(kind){
+  var g=geom();
+  if(kind==='obs') return viewFrom([0,0,-1],[0,1,0]);
+  if(kind==='node') return viewFrom(toScene(g.n),[0,0,-1]);
+  return viewFrom(g.hS,toScene(g.n));
+}
+function goTo(Vt){trans={V0:V,Vt:Vt,R:mm(Vt,tp(V)),t0:performance.now(),dur:480};}
+
+/* ---------- projection ---------- */
+function proj3(v){var s=mv(V,toScene(v));var k=DCAM/(DCAM-s[2]);return {x:cx+sc*k*s[0],y:cy-sc*k*s[1],z:s[2]};}
+
+/* ---------- drawing ---------- */
+function draw(){
+  var css=getComputedStyle(document.documentElement);
+  function C(n){return (css.getPropertyValue(n)||'').trim()||'#888';}
+  var col={fg:C('--fg'),mut:C('--muted'),axis:C('--axis'),sky:C('--sky'),skyline:C('--skyline'),orb:C('--orb'),panel:C('--panel'),orbit:C('--orbit'),
+    Om:C('--c-omega'),inc:C('--c-inc'),w:C('--c-w'),nu:C('--c-nu'),psi:C('--c-psi')};
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  cx=W/2; cy=H/2; sc=Math.min(W,H)/5.4;
+  var g=geom(), e=g.e, O=[0,0,0], P=proj3, i, fade=1;
+
+  function path(pts,close){ctx.beginPath();for(var k=0;k<pts.length;k++){if(k)ctx.lineTo(pts[k].x,pts[k].y);else ctx.moveTo(pts[k].x,pts[k].y);}if(close)ctx.closePath();}
+  function stroke(pts,color,lw,dash,alpha){ctx.save();ctx.globalAlpha=(alpha===undefined?1:alpha)*fade;ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.setLineDash(dash||[]);ctx.lineJoin='round';path(pts);ctx.stroke();ctx.restore();}
+  function fillPoly(pts,color,alpha){ctx.save();ctx.globalAlpha=alpha*fade;ctx.fillStyle=color;path(pts,true);ctx.fill();ctx.restore();}
+  function seg(a,b,color,lw,dash,alpha){stroke([P(a),P(b)],color,lw,dash,alpha);}
+  function arrow(a,b,color,lw){
+    var pa=P(a),pb=P(b);stroke([pa,pb],color,lw);
+    var ang=atan2(pb.y-pa.y,pb.x-pa.x),L=9;
+    ctx.save();ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(pb.x,pb.y);
+    ctx.lineTo(pb.x-L*cos(ang-0.4),pb.y-L*sin(ang-0.4));ctx.lineTo(pb.x-L*cos(ang+0.4),pb.y-L*sin(ang+0.4));ctx.closePath();ctx.fill();ctx.restore();}
+  function dotAt(v,r,color,hollow){
+    var p=P(v);ctx.save();ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);
+    if(hollow){ctx.lineWidth=2;ctx.strokeStyle=color;ctx.fillStyle=col.panel;ctx.fill();ctx.stroke();}
+    else{ctx.fillStyle=color;ctx.fill();}
+    ctx.restore();}
+  function txt(s,v,color,dx,dy,size){
+    var p=P(v);ctx.save();ctx.font='600 '+(size||13)+'px ui-sans-serif, system-ui, sans-serif';
+    ctx.globalAlpha=fade;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=3.5;ctx.strokeStyle=col.panel;
+    ctx.strokeText(s,p.x+(dx||0),p.y+(dy||0));ctx.fillStyle=color;ctx.fillText(s,p.x+(dx||0),p.y+(dy||0));ctx.restore();}
+  function txtOut(s,v,color,dist,size){
+    var p=P(v),o=P(O),dx=p.x-o.x,dy=p.y-o.y,n=Math.hypot(dx,dy);
+    if(n<1){dx=0;dy=-1;n=1;}
+    txt(s,v,color,dx/n*(dist||16),dy/n*(dist||16),size||12);}
+  function angleViz(e1,e2,r,phi,color,label,nrm){
+    if(phi<0.02) return;
+    fade=clamp((Math.abs(dot(nrm,V[2]))-0.10)/0.25,0,1);
+    if(fade<0.03){fade=1;return;}
+    var n=Math.max(8,Math.ceil(phi/(PI/36))),pts=[],k,a;
+    for(k=0;k<=n;k++){a=phi*k/n;pts.push(add(mul(e1,r*cos(a)),mul(e2,r*sin(a))));}
+    var pp=pts.map(P);
+    if(S.wedges) fillPoly([P(O)].concat(pp),color,0.20);
+    stroke(pp,color,2.6);
+    var am=phi/2;
+    txt(label,add(mul(e1,r*1.34*cos(am)),mul(e2,r*1.34*sin(am))),color,0,0,13);
+    fade=1;
+  }
+
+  /* orbit halves: z>0 (receding, between ascending and descending node) and z<0 (approaching) */
+  var E1=g.Eofnu(-g.om), E2=g.Eofnu(PI-g.om); if(E2<=E1)E2+=TAU;
+  function sample(Ea,Eb,n){var out=[],k;for(k=0;k<=n;k++)out.push(g.posE(Ea+(Eb-Ea)*k/n));return out;}
+  var rec=sample(E1,E2,90), app=sample(E2,E1+TAU,90);
+  var viewerObserverSide = V[2][2] < 0;   /* viewer on the −z side of the sky plane */
+  var behind = viewerObserverSide ? 'rec' : 'app';
+  function drawHalf(which){
+    var pts=(which==='rec'?rec:app).map(P);
+    if(S.planes) fillPoly(pts,col.orb,1);
+    stroke(pts,col.orbit,2.4,which==='rec'?[]:[7,5],1);
+  }
+
+  /* 1. half of the orbit that is behind the sky plane */
+  drawHalf(behind);
+
+  /* 2. sky plane */
+  var disk=[];for(i=0;i<96;i++){var aa=TAU*i/96;disk.push(P([SK*cos(aa),SK*sin(aa),0]));}
+  var ring=[];for(i=0;i<=96;i++){var ab=TAU*i/96;ring.push(P([SK*0.5*cos(ab),SK*0.5*sin(ab),0]));}
+  if(S.planes) fillPoly(disk,col.sky,1);
+  path(disk,true);ctx.save();ctx.strokeStyle=col.skyline;ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
+  if(S.planes) stroke(ring,col.skyline,1,[3,5],0.8);
+
+  /* 3. half of the orbit in front of the sky plane */
+  drawHalf(behind==='rec'?'app':'rec');
+
+  /* 4. things lying in the sky plane */
+  arrow(O,[SK,0,0],col.axis,1.6); arrow(O,[0,SK,0],col.axis,1.6);
+  txt('N',[SK*1.1,0,0],col.mut,0,0,14); txt('E',[0,SK*1.1,0],col.mut,0,0,14);
+
+  if(S.proj){
+    var apparent=[],k2;for(k2=0;k2<=120;k2++){var Ek=TAU*k2/120,pk=g.posE(Ek);apparent.push(P([pk[0],pk[1],0]));}
+    stroke(apparent,col.mut,1.3,[2,4],0.95);
+  }
+  /* line of nodes: ascending end bold, descending end dashed */
+  var nL=SK*0.98;
+  seg(O,mul(g.n,nL),col.Om,2.6,[],1);
+  seg(O,mul(g.n,-nL),col.Om,1.6,[6,5],0.8);
+
+  /* line of sight (through the primary) */
+  seg([0,0,-1.5],[0,0,1.5],col.mut,1.2,[2,4],0.9);
+  var losLen=Math.hypot(P([0,0,1.72]).x-P(O).x,P([0,0,1.72]).y-P(O).y);
+  if(losLen>40){ txt('observer',[0,0,-1.72],col.mut,0,0,11); txt('+z (away)',[0,0,1.72],col.mut,0,0,11); }
+  else { txt('line of sight ⟂ screen',[0,0,0],col.mut,0,30,11); }
+
+  /* scan direction */
+  var sd=[cos(S.psi*D2R),sin(S.psi*D2R),0];
+  var body=g.posE(g.Ecur), bp=[body[0],body[1],0];
+  if(S.scan){
+    seg(O,mul(sd,-SK),col.psi,1.3,[],0.55);
+    arrow(O,mul(sd,SK),col.psi,2.0);
+    txt('scan ψ',mul(sd,SK*1.12),col.psi,0,0,12);
+    var w1=dot(bp,sd), foot=mul(sd,w1);
+    seg(bp,foot,col.psi,1.3,[2,3],1);
+    seg(O,foot,col.psi,4.5,[],0.75);
+    dotAt(foot,3.5,col.psi,false);
+    txt('w',add(mul(foot,0.5),mul([-sd[1],sd[0],0],0.13)),col.psi,0,0,14);
+  }
+
+  /* 5. angle arcs */
+  if(S.arcs){
+    var nSky=[0,0,1], nNode=toScene(g.n), nOrb=g.hS;
+    angleViz([1,0,0],[0,1,0],1.00,S.Om*D2R,col.Om,'Ω '+S.Om.toFixed(0)+'°',nSky);
+    angleViz(g.sp,[0,0,1],0.85,S.inc*D2R,col.inc,'i '+S.inc.toFixed(0)+'°',nNode);
+    angleViz(g.n,g.u2,0.62,S.om*D2R,col.w,'ω '+S.om.toFixed(0)+'°',nOrb);
+    angleViz(g.Ph,g.Qh,0.62,g.nu,col.nu,'ν '+(g.nu*R2D).toFixed(0)+'°',nOrb);
+    if(S.scan) angleViz([1,0,0],[0,1,0],1.38,S.psi*D2R,col.psi,'ψ '+S.psi.toFixed(0)+'°',nSky);
+    /* reference rays that bound the inclination angle */
+    seg(O,mul(g.sp,1.1),col.Om,1.2,[3,4],0.9);
+    seg(O,mul(g.u2,1.1),col.inc,1.2,[3,4],0.9);
+  }
+
+  /* 6. periastron, nodes, companion */
+  var per=g.posE(0);
+  seg(O,per,col.w,2.0,[],1);
+  dotAt(per,4,col.w,false); txtOut('periastron',per,col.w,17,11);
+  var AN=g.posE(E1), DN=g.posE(E2);
+  dotAt(AN,5,col.Om,false); txtOut('AN',AN,col.Om,14,12);
+  dotAt(DN,5,col.Om,true);  txtOut('DN',DN,col.Om,14,12);
+
+  if(S.proj){ seg(body,bp,col.mut,1.2,[2,3],0.95); seg(O,bp,col.mut,1.2,[],0.7); dotAt(bp,3.5,col.mut,true); }
+  seg(O,body,col.nu,2.0,[],1);
+  dotAt(body,6,col.nu,false); txtOut('primary',body,col.nu,20,11);
+  /* the companion lies on the opposite side of the barycentre, on the line through the primary */
+  (function(){var bl=Math.hypot(body[0],body[1],body[2]);if(bl>1e-6){var opp=mul(body,-0.8/bl);
+    seg(O,opp,col.mut,1.3,[4,4],0.9);dotAt(opp,3.5,col.mut,true);txt('companion side',opp,col.mut,0,15,11);}})();
+  dotAt(O,6,col.fg,false); txt('barycentre',O,col.fg,0,-15,11);
+
+  updateReadout(g);
+}
+
+/* ---------- readouts ---------- */
+function f(x,d){return (Math.abs(x)<5e-10?0:x).toFixed(d);}
+function updateReadout(g){
+  var a=S.a, e=g.e, E=g.Ecur;
+  var A=a*g.Ph[0], B=a*g.Ph[1], F=a*g.Qh[0], G=a*g.Qh[1];
+  var Cc=a*sin(g.om)*sin(g.inc), Hh=a*cos(g.om)*sin(g.inc);
+  var X=cos(E)-e, Y=g.b*sin(E);
+  var x=A*X+F*Y, y=B*X+G*Y, z=Cc*X+Hh*Y;
+  var rho=Math.hypot(x,y), th=wrap(atan2(y,x))*R2D;
+  var psi=S.psi*D2R, w=x*cos(psi)+y*sin(psi);
+  var rows=[
+    ['E, ν',f(E*R2D,1)+'°, '+f(g.nu*R2D,1)+'°'],
+    ['X, Y',f(X,3)+', '+f(Y,3)],
+    ['A, B',f(A,1)+', '+f(B,1)+' mas',1],
+    ['F, G',f(F,1)+', '+f(G,1)+' mas'],
+    ['x (N), y (E)',f(x,1)+', '+f(y,1)+' mas',1],
+    ['z (away)',f(z,1)+' mas'],
+    ['ρ, θ',f(rho,1)+' mas, '+f(th,1)+'°'],
+    ['w (along scan)',f(w,1)+' mas'+(S.scan?'':'  (ψ = '+S.psi.toFixed(0)+'°)')]
+  ];
+  var h='';rows.forEach(function(r){h+='<tr'+(r[2]?' class="sep"':'')+'><th>'+r[0]+'</th><td>'+r[1]+'</td></tr>';});
+  document.getElementById('ro').innerHTML=h;
+
+  /* inversion check */
+  var u=A*A+B*B+F*F+G*G, v=A*G-B*F, disc=sqrt(Math.max(u*u-4*v*v,0));
+  var a2=0.5*(u+disc), ar=sqrt(a2), ir=Math.acos(clamp(v/a2,-1,1));
+  var S1=atan2(B-F,A+G), D1=atan2(-(B+F),A-G);
+  var omr=wrap(0.5*(S1+D1)), Omr=wrap(0.5*(S1-D1));
+  var dw=wrapPi(g.om-omr), dO=wrapPi(g.Om-Omr), tol=2e-3;
+  var same=Math.abs(dw)<tol&&Math.abs(dO)<tol, flip=Math.abs(Math.abs(dw)-PI)<tol&&Math.abs(Math.abs(dO)-PI)<tol;
+  var el=document.getElementById('chk');
+  var inv='Inversion from (A,B,F,G): a′ = '+f(ar,1)+' mas, i′ = '+f(ir*R2D,1)+'°, ω′ = '+f(omr*R2D,1)+'°, Ω′ = '+f(Omr*R2D,1)+'°. ';
+  if(same) el.innerHTML=inv+'<span class="ok">✓ recovers the input.</span>';
+  else if(flip) el.innerHTML=inv+'<span class="ok">✓ recovers the input up to the 180° node ambiguity</span> (ω, Ω) → (ω+180°, Ω+180°), which astrometry alone cannot break.';
+  else el.innerHTML=inv+'<span class="bad">mismatch</span>';
+}
+
+/* ---------- interaction ---------- */
+cv.addEventListener('pointerdown',function(ev){drag={x:ev.clientX,y:ev.clientY};trans=null;try{cv.setPointerCapture(ev.pointerId);}catch(_){}});
+cv.addEventListener('pointermove',function(ev){
+  if(!drag)return;
+  var dx=ev.clientX-drag.x, dy=ev.clientY-drag.y; drag.x=ev.clientX; drag.y=ev.clientY;
+  V=orthonormalize(mm(rotX(dy*0.008),mm(rotY(dx*0.008),V))); dirty=true;});
+function endDrag(){drag=null;}
+cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
+
+function resize(){
+  var r=cv.getBoundingClientRect(); dpr=window.devicePixelRatio||1;
+  W=Math.max(200,r.width); H=Math.max(200,r.height);
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); dirty=true;
+}
+if(typeof ResizeObserver==='function') new ResizeObserver(resize).observe(cv); else window.addEventListener('resize',resize);
+if(window.matchMedia){ try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){dirty=true;});}catch(_){} }
+new MutationObserver(function(){dirty=true;}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+var last=0;
+function frame(now){
+  var dt=last?Math.min(0.1,(now-last)/1000):0; last=now;
+  if(trans){
+    var t=clamp((performance.now()-trans.t0)/trans.dur,0,1), fe=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    if(t>=1){V=trans.Vt;trans=null;}
+    else{var aa=axisAngle(trans.R);V=orthonormalize(mm(rodrigues(aa.ax,aa.ang*fe),trans.V0));}
+    dirty=true;
+  }
+  if(S.anim){S.M=(S.M+dt*40)%360;setSlider('M',Math.round(S.M));dirty=true;}
+  if(dirty){dirty=false;draw();}
+  requestAnimationFrame(frame);
+}
+resize();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
