@@ -16,7 +16,7 @@ Here are some ideas to get you started:
 -->
 
 
-I’m currently working on solving Gaia DR4 visual binaries 😶‍🌫️
+I’m currently working on solving the orbits of Gaia DR4 visual binaries 😶‍🌫️
 
 <img src="orbit.png" width="60%">
 
