@@ -16,7 +16,6 @@ Here are some ideas to get you started:
 -->
 
 
-I’m currently working on solving Gaia DR4 visual binaries.
-That's why I need this 😶‍🌫️
+I’m currently working on solving Gaia DR4 visual binaries 😶‍🌫️
 
 👉 **[![Orbit Geometry](orbit-preview.png)](https://yt-wangg.github.io/yt-wangg/orbit.html)**
