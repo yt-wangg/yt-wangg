@@ -18,6 +18,6 @@ Here are some ideas to get you started:
 
 I’m currently working on solving Gaia DR4 visual binaries 😶‍🌫️
 
-![orbit.png]
+![orbit](orbit.png)
 
 👉 **[Open interactive demo](https://yt-wangg.github.io/yt-wangg/orbit.html)**
