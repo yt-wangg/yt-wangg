@@ -19,5 +19,6 @@ Here are some ideas to get you started:
 I’m currently working on solving Gaia DR4 visual binaries 😶‍🌫️
 
 ![orbit](orbit.png)
+<img src="orbit.png" width="80%">
 
 👉 **[Open interactive demo](https://yt-wangg.github.io/yt-wangg/orbit.html)**
