@@ -18,4 +18,5 @@ Here are some ideas to get you started:
 
 I’m currently working on solving Gaia DR4 visual binaries 😶‍🌫️
 
-👉 **[![Orbit Geometry](orbit-preview.png)](https://yt-wangg.github.io/yt-wangg/orbit.html)**
+![Orbit visualization demo](Screenshot 2026-10-03 at 21.35.00.png)
+👉 **[Open interactive demo](https://yt-wangg.github.io/yt-wangg/orbit.html)**
