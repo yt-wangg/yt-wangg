@@ -14,3 +14,9 @@ Here are some ideas to get you started:
 - 😄 Pronouns: ...
 - ⚡ Fun fact: ...
 -->
+
+
+I’m currently working on solving Gaia DR4 visual binaries.
+That's why I need an interactive 3D visualization of binary star orbit geometry and the Thiele–Innes constants.
+
+👉 **[Open interactive demo](your-public-link-here)**
