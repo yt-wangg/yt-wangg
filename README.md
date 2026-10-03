@@ -17,6 +17,6 @@ Here are some ideas to get you started:
 
 
 I’m currently working on solving Gaia DR4 visual binaries.
-That's why I need an interactive 3D visualization of binary star orbit geometry and the Thiele–Innes constants.
+That's why I need this 😶‍🌫️
 
-👉 **[Open interactive demo](https://yt-wangg.github.io/yt-wangg/orbit.html)**
+👉 **[![Orbit Geometry](orbit-preview.png)](https://yt-wangg.github.io/yt-wangg/orbit.html)**
